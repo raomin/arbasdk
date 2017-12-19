@@ -39,8 +39,10 @@ class Simulator(Thread):
                 display.set_icon(self.icon)
 
         environ['SDL_VIDEO_CENTERED'] = '1'
+        print("Launching simulator %dx%d " % (self.sim_width, self.sim_height) )
         with self.arbalet.sdl_lock:
-            self.display = display.set_mode((self.sim_width, self.sim_height), 0, 32)
+            self.display = display.set_mode([self.sim_width, self.sim_height], 0, 32)
+            
         self.running = False
         self.start()
 

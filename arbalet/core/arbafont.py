@@ -23,7 +23,7 @@ class RenderedText(object):
 class Font(object):
     MAX_SIZE = 100
 
-    def __init__(self, height, width, vertical=False, font=None):
+    def __init__(self, height, width, vertical=False, font=None, size=None):
         pygame_init()
         self.vertical = vertical
         self.height = height
@@ -37,11 +37,13 @@ class Font(object):
                 raise ValueError("pygame cannot find any file for the selected font {}".format(font))
             else:
                 font = font_file
-
-        if vertical:
-            self._size = self._get_ideal_font_size(height, width, font)
-        else:
-            self._size = self._get_ideal_font_size(width, height, font)
+        if size is None:
+            if vertical:
+                self._size = self._get_ideal_font_size(height, width, font)
+            else:
+                self._size = self._get_ideal_font_size(width, height, font)
+        else:  
+            self._size = size
 
         if self._size==0:
             raise ValueError("The selected font {} cannot be rendered in any size".format(font))

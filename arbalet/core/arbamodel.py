@@ -153,6 +153,21 @@ class Model(object):
                         self.set_pixel(h, w, foreground if illuminated else background)
             rate.sleep()
 
+    
+    def print_at(self,height,width, text,foreground, size=8, font=None):
+        font = Font(self.height, self.width, font=font,size=size)
+        s=font._font.render(text,False,(0,0,0))
+        transp = s.get_colorkey()
+
+        for x in range(s.get_width()):
+            for y in range(s.get_height()):
+                if (transp != s.get_at((x,y))):
+                    self.set_pixel(height-s.get_height()+y,width+x,foreground)
+
+            
+
+        
+    
     def flash(self, duration=4., speed=1.5):
         """
         Blocking and self-locking call flashing the current model on and off (mainly for game over)

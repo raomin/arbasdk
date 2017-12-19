@@ -11,6 +11,7 @@
 from .arbasim import Simulator
 from .link import Arbalink
 from .arbaclient import Arbaclient
+from .arbaweb import Arbaweb
 from .arbamodel import Model
 from .events import Events
 from .sensors import CapacitiveTouch
@@ -22,7 +23,7 @@ from threading import RLock
 __all__ = ['Arbalet']
 
 class Arbalet(object):
-    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True, joystick=''):
+    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=40, config='', interactive=True, webserver = '', joystick=''):
         if config=='' or joystick=='':
             cfg_path = path.join(path.dirname(__file__), '..', 'config', 'default.cfg')
             cfg_parser = RawConfigParser()
@@ -61,10 +62,25 @@ class Arbalet(object):
         self._simulation = simulation
         self._hardware = hardware
         self._server = server
+        
 
         self.diminution = diminution
         self.height = len(self.config['mapping'])
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
+
+        if ('automapping' in self.config):
+            (w,h,opt)=self.config['automapping']
+            self.config['mapping']=[[x+w*y for x in range(w)] for y in range(h)]
+            self.height = h
+            self.width = w
+            if (opt=='ZIGZAG'): #When leds are chained in zigzag, reverse odd lines
+                for x in [k for k in range(h) if k %2]:
+                    self.config['mapping'][x]=self.config['mapping'][::-1]
+
+        if ('webserver' in self.config):
+            self._webserver = self.config["webserver"]
+
+
         self.user_model = Model(self.height, self.width, 'black')
         self.touch = CapacitiveTouch(config, self.height, self.width)
         self.sdl_lock = RLock()  # Temporary hack to lock pygame calls using SDL before we create a centralized event manager for joystick and so on
@@ -80,6 +96,7 @@ class Arbalet(object):
         self.arbaclient = None
 
         if self._simulation:
+            print("Launching simulation for %d x %d with a factor of %d" % (self.height,self.width,factor_sim))
             self.arbasim = Simulator(self, self.height*factor_sim, self.width*factor_sim)
 
         if self._hardware:
@@ -93,6 +110,14 @@ class Arbalet(object):
                 self.arbaclient = Arbaclient(self, server[0])
             else:
                 raise ValueError('Incorrect server address, use ip:port or ip')
+        if ('webserver' in self.config):
+            webserver = self.config["webserver"].split(':')
+            if len(webserver)==2:
+                self.webserver = Arbaweb(self, webserver[0], int(webserver[1]))
+            elif len(webserver)==1:
+                self.webserver= Arbaweb(self, webserver[0])
+            else:
+                raise ValueError('Incorrect webserver address, use ip:port or ip')
 
     @property
     def end_model(self):
@@ -112,4 +137,6 @@ class Arbalet(object):
             self.arbalink.close()
         if len(self._server)>0:
             self.arbaclient.close()
+        if hasattr(self,"_webserver"):
+            self.webserver.close()
         self.events.close()
