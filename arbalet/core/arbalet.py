@@ -75,8 +75,12 @@ class Arbalet(object):
             self.width = w
             if (opt=='ZIGZAG'): #When leds are chained in zigzag, reverse odd lines
                 for x in [k for k in range(h) if k %2]:
-                    self.config['mapping'][x]=self.config['mapping'][::-1]
+                    self.config['mapping'][x]=self.config['mapping'][x][::-1]
+            if (opt=='ZAGZIG'): #When leds are chained in zigzag, reverse Even lines
+                for x in [k for k in range(h) if k %2]:
+                    self.config['mapping'][x]=self.config['mapping'][x][::-1]
 
+        print self.config['mapping']
         if ('webserver' in self.config):
             self._webserver = self.config["webserver"]
 
