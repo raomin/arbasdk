@@ -43,7 +43,7 @@ class Arbaweb(Thread):
 
         return tornado.web.Application([
             (r"/key/.*", KeyHandler),
-            (r"/(.*)", tornado.web.StaticFileHandler, {'path': os.path.join(os.getcwd(),"arbawebgui"),"default_filename": 'gui.html'}),
+            (r"/(.*)", tornado.web.StaticFileHandler, {'path': os.path.join(os.path.dirname(os.path.abspath(__file__)),"arbawebgui"),"default_filename": 'gui.html'}),
         ])
     def run_tornado(self):
         print 'running tornado...'

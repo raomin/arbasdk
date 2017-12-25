@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<script src="./dist/nipple.js"></script>
+<script>
+
+
+</script>
+
+
+<body>
+    <div id="container"></div>
+    <div id="info">
+        A toi de jouer!<br />
+    </div>
+    <div id="zone_joystick" style="float:left; height:100%; width:100%; position:absolute; background-color:darkgrey">
+    </div>
+
+    <script type="text/javascript" src="dist/nipple.js"></script>
+    <script type="text/javascript">
+        function sendKey(key,type) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "/key/" + key + "/" + type, true);
+            xhttp.send();
+        }
+
+        var options = {
+            zone: document.getElementById('zone_joystick')
+        };
+        var manager = nipplejs.create(options);
+        var direction;
+
+        manager.on('start end dir', function (evt, data) {
+            if (evt.type == "dir") {
+                if (this.direction) {
+                    console.log("Send stop " + this.direction);
+                    sendKey(this.direction, 'up');
+                }
+                this.direction = data.direction.angle;
+                console.log("Send start " + this.direction);
+                sendKey(this.direction, 'down');
+            }
+            if (evt.type == "end") {
+                console.log("Send stop " + this.direction);
+                sendKey(this.direction, 'up');
+            }
+            console.info(evt, data);
+        });
+
+    </script>
+
+</body>
+</html>
