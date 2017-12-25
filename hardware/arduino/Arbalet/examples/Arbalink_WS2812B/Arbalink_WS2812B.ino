@@ -18,6 +18,8 @@
 #define CMD_ERROR 'E'
 #define PROTOCOL_VERSION 2
 
+#define DEBUG false
+
 unsigned short leds_num = 0;
 char pin_num = 255;
 char touch_type = 255;
@@ -36,9 +38,9 @@ void show_all(byte r=0, byte g=0, byte b=0) {
 }
 
 void setup() {
-  while(!Serial);
-  Serial.begin(115200);
-  Serial.setTimeout(5000);
+  
+  Serial.begin(1500000);
+  Serial.setTimeout(500);
   wait_for_connection();
 }
 
@@ -94,7 +96,7 @@ boolean handshake() {
   
   /* Memory allocation */
   free_allocated_memory();  // TODO, do not free, updating existing objects would be faster
-  pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
+  pixels = new Adafruit_NeoPixel(leds_num, D5, NEO_GRB + NEO_KHZ800);
   
   /* Init the touch sensor if enabled */
   boolean touch_init = false;
@@ -104,6 +106,8 @@ boolean handshake() {
   }
   else {
       touch_init = true;
+      if (DEBUG)
+        Serial.println("TNo touch");
   }
   
   /* Init the LED strip */
@@ -117,6 +121,7 @@ boolean handshake() {
 
 boolean read_buffer(char readiness) {
   write_char(readiness);
+  if (DEBUG) Serial.println("TReading a buffer");
   for(unsigned short led=0; led<leds_num; ++led) {
     short num_read = Serial.readBytes(rgb, 3);
     if(num_read!=3) {
@@ -126,10 +131,13 @@ boolean read_buffer(char readiness) {
       buffer[3*led+color] = rgb[color];
     }
   }
+  if (DEBUG) Serial.println("TDone reading.");
   return true;
 }
 
 void send_touch_frame() {
+  if (DEBUG) Serial.println("TSend touch!!!.");
+  
     write_short(touch->touched());
     for(char key=0; key<touch_type; ++key) {
       write_short(touch->filteredData(key));
@@ -137,10 +145,12 @@ void send_touch_frame() {
 }
 
 void update_leds_from_buffer() {
+  //Serial2.print("Updating leds....");
   for(unsigned short led=0; led<leds_num; ++led) {
     pixels->setPixelColor(led, pixels->Color(buffer[led*3], buffer[led*3+1], buffer[led*3+2]));
   }
   pixels->show();
+  if (DEBUG) Serial.println("TDone");
 }
 
 void loop() {
@@ -152,6 +162,7 @@ void loop() {
       update_leds_from_buffer();
     }
     else {
+      if (DEBUG) Serial.println("TError no read....");
       wait_for_connection();
     }
 }

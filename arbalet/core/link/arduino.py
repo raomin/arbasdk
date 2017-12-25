@@ -22,6 +22,7 @@ class ArduinoLink(AbstractLink):
     CMD_BUFFER_READY_DATA_FOLLOWS = b'D'
     CMD_CLIENT_INIT_SUCCESS = b'S'
     CMD_CLIENT_INIT_FAILURE = b'F'
+    CMD_DEBUG = b'T'
     PROTOCOL_VERSION = 2
     
     def __init__(self, arbalet, diminution=1):
@@ -44,7 +45,7 @@ class ArduinoLink(AbstractLink):
             self._serial.close()
         device = self._arbalet.config['devices'][self._platform][self._current_device]
         try:
-            self._serial = Serial(device, self._arbalet.config['speed'], timeout=3)
+            self._serial = Serial(device, self._arbalet.config['speed'], timeout=6)
         except SerialException as e:
             print("[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._arbalet.config['speed'], str(e)), file=stderr)
             self._serial = None
@@ -84,6 +85,11 @@ class ArduinoLink(AbstractLink):
             self._connected = False
             return 0
 
+    def get_string(self):
+        return self._serial.readline()
+
+
+
     def write_short(self, s):
         self._serial.write(pack('<H', s))
 
@@ -122,6 +128,8 @@ class ArduinoLink(AbstractLink):
                 array[idx+2] = frame[h][w][2]
         return array
 
+
+
     def read_touch_frame(self):
         try:
             touch_int = self.read_short()
@@ -140,7 +148,9 @@ class ArduinoLink(AbstractLink):
     def write_led_frame(self, end_model):
         try:
             ready = self.read_char()
-            commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS]
+            commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS, self.CMD_DEBUG]
+            if ready == self.CMD_DEBUG :
+                print ("DEBUG: "+self.get_string())
             if ready in commands:
                 frame = self.get_serial_frame(end_model)
                 self._serial.write(frame)
