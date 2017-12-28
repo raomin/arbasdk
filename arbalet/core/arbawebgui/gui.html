@@ -12,6 +12,10 @@
     <div id="container"></div>
     <div id="info">
         A toi de jouer!<br />
+        <select id=playernum>
+            <option value='_p1'>Player 1</option>
+            <option value='_p2'>Player 2</option>
+        </select>
     </div>
     <div id="zone_joystick" style="float:left; height:100%; width:100%; position:absolute; background-color:darkgrey">
     </div>
@@ -19,13 +23,27 @@
     <script type="text/javascript" src="dist/nipple.js"></script>
     <script type="text/javascript">
         function sendKey(key,type) {
+
             var xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange=function() {
+                if (xhttp.readyState === 4){   //if complete
+                    if(xhttp.status != 200){  //Go back to lobby
+                        document.location="home.html"
+                    }
+                } 
+            }
+
+            key= key+document.getElementById("playernum").value
+
             xhttp.open("GET", "/key/" + key + "/" + type, true);
             xhttp.send();
+
         }
 
         var options = {
-            zone: document.getElementById('zone_joystick')
+            zone: document.getElementById('zone_joystick'),
+            threshold: 0.3
         };
         var manager = nipplejs.create(options);
         var direction;
